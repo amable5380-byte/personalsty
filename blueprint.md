@@ -23,6 +23,13 @@
   - Accent: #39FF14 (Neon Green), #00E5FF (Electric Blue)
 - **Effects**: Glassmorphism, Glow effects, Subtle noise textures
 
+## Cloudflare 배포 설정 가이드
+출력 화면이 업데이트되지 않을 경우 아래 사항을 확인해 주세요:
+- **Source Repository**: `amable5380-byte/personalsty`로 연결되어 있는지 확인.
+- **Build Command**: `npm run build`
+- **Build Output Directory**: `dist`
+- **Node.js Version**: `20` 이상 (Vite 7 요구 사항)
+
 ## 진행 상황
 - [x] 프로젝트 계획 수립
 - [x] 기본 의존성 설치 (lucide-react, framer-motion)
@@ -30,3 +37,4 @@
 - [x] 레이더 애니메이션 컴포넌트 구현
 - [x] 키워드 관리 및 데이터 시뮬레이션 구현
 - [x] 요약 패널 및 차트 구현
+- [x] Cloudflare 배포 가이드 추가

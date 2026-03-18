@@ -185,7 +185,7 @@ function App() {
             <button className="button-primary" onClick={() => setIsMonitoring(!isMonitoring)}>
               {isMonitoring ? '모니터링 일시정지' : '모니터링 시작'}
             </button>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--surface-color)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyCenter: 'center' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--surface-color)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <AlertCircle size={20} />
             </div>
           </div>

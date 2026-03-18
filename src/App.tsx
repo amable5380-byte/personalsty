@@ -36,8 +36,7 @@ function App() {
   };
 
   const nextStep = () => {
-    if (step === 'initial' && photo) setStep('physical');
-    else if (step === 'physical') setStep('complete');
+    if (photo && height && weight) setStep('complete');
   };
 
   const containerVariants = {
@@ -60,7 +59,7 @@ function App() {
           >
             <div className="onboarding-header">
               <h1>나만의 스타일리스트</h1>
-              <p>정확한 스타일링을 위해 전신 사진을 업로드해 주세요.</p>
+              <p>정확한 스타일링을 위해 사진과 신체 정보를 입력해 주세요.</p>
             </div>
 
             <div className="upload-section">
@@ -71,7 +70,7 @@ function App() {
                 accept="image/*" 
                 style={{ display: 'none' }} 
               />
-              <div className="image-dropzone" onClick={triggerUpload}>
+              <div className="image-dropzone" onClick={triggerUpload} style={{ height: '240px' }}>
                 {photo ? (
                   <>
                     <img src={photo} alt="Preview" className="image-preview" />
@@ -81,38 +80,11 @@ function App() {
                   </>
                 ) : (
                   <div className="upload-placeholder">
-                    <Camera size={48} strokeWidth={1.5} />
+                    <Camera size={40} strokeWidth={1.5} />
                     <span>사진 업로드하기</span>
-                    <p style={{ fontSize: '0.8rem', opacity: 0.7 }}>JPG, PNG 지원</p>
                   </div>
                 )}
               </div>
-            </div>
-
-            <button 
-              className="button-primary" 
-              disabled={!photo}
-              onClick={nextStep}
-              style={{ opacity: photo ? 1 : 0.5, cursor: photo ? 'pointer' : 'not-allowed' }}
-            >
-              <span>다음 단계로</span>
-              <ChevronRight size={20} />
-            </button>
-          </motion.div>
-        )}
-
-        {step === 'physical' && (
-          <motion.div 
-            key="physical"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="onboarding-card"
-          >
-            <div className="onboarding-header">
-              <h1>신체 정보 입력</h1>
-              <p>체형에 맞는 핏을 추천해 드리기 위해 필요합니다.</p>
             </div>
 
             <div className="inputs-section">
@@ -147,23 +119,15 @@ function App() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <button 
-                className="button-primary" 
-                style={{ flex: 1, background: 'none', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', boxShadow: 'none' }}
-                onClick={() => setStep('initial')}
-              >
-                이전으로
-              </button>
-              <button 
-                className="button-primary" 
-                style={{ flex: 2 }}
-                onClick={nextStep}
-              >
-                <span>분석 시작하기</span>
-                <CheckCircle2 size={20} />
-              </button>
-            </div>
+            <button 
+              className="button-primary" 
+              disabled={!photo || !height || !weight}
+              onClick={nextStep}
+              style={{ opacity: (photo && height && weight) ? 1 : 0.5, cursor: (photo && height && weight) ? 'pointer' : 'not-allowed' }}
+            >
+              <span>스타일 분석 시작하기</span>
+              <ChevronRight size={20} />
+            </button>
           </motion.div>
         )}
 

@@ -17,9 +17,9 @@ The goal is to create a beautiful, modern onboarding screen for users to enter t
 ### 1. UI/UX Design
 - **Theme:** Minimalist, premium, and clean. Soft backgrounds with subtle textures.
 - **Components:**
-    - **Photo Upload:** Interactive drop-zone or click-to-upload area with instant preview.
-    - **Physical Data:** Sliders or elegant numeric inputs for height (cm) and weight (kg).
-    - **Transitions:** Smooth step-by-step or single-page fade-ins using `framer-motion`.
+    - **Photo Upload:** Interactive drop-zone or click-to-upload area with instant preview (Labeled "사진").
+    - **Physical Data:** Elegant numeric inputs for height (cm) and weight (kg) on the same screen.
+    - **Transitions:** Smooth fade-ins using `framer-motion`.
 - **Typography:** Expressive and readable.
 - **Color Palette:** Warm neutrals, soft shadows, and a "glow" effect on primary buttons.
 
@@ -29,8 +29,8 @@ The goal is to create a beautiful, modern onboarding screen for users to enter t
 - [x] Refactor `App.tsx` to include:
     - State for `photo`, `height`, and `weight`.
     - `ImageUpload` component logic.
-    - Responsive form layout.
-    - Validation and "Next" transition.
+    - Single-page responsive form layout.
+    - Validation and "Analysis" transition.
 - [x] Verify responsiveness and visual fidelity.
 
 ### 3. Verification & Testing

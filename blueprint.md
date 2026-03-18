@@ -23,12 +23,15 @@
   - Accent: #39FF14 (Neon Green), #00E5FF (Electric Blue)
 - **Effects**: Glassmorphism, Glow effects, Subtle noise textures
 
-## Cloudflare 배포 설정 가이드
+## Cloudflare 배포 설정 가이드 (GitHub 연동)
 출력 화면이 업데이트되지 않을 경우 아래 사항을 확인해 주세요:
-- **Source Repository**: `amable5380-byte/personalsty`로 연결되어 있는지 확인.
+- **Source Repository**: `amable5380-byte/personalsty`로 연동되어 있는지 확인.
+- **Production Branch**: `main`으로 설정.
 - **Build Command**: `npm run build`
 - **Build Output Directory**: `dist`
 - **Node.js Version**: `20` 이상 (Vite 7 요구 사항)
+
+GitHub에 푸시된 최신 코드가 Cloudflare Pages에서 자동으로 빌드 및 배포됩니다.
 
 ## 진행 상황
 - [x] 프로젝트 계획 수립

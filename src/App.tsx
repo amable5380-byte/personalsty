@@ -1,4 +1,5 @@
-import { useState, useRef, ChangeEvent } from 'react';
+import { useState, useRef } from 'react';
+import type { ChangeEvent } from 'react';
 import { 
   Camera, 
   ChevronRight, 

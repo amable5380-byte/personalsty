@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:pages": "wrangler pages dev ./dist --port $PORT --compatibility-date=2024-04-14",
     "build": "tsc -b && vite build",
+    "build:pages": "npm run build && npm run dev:pages",
     "lint": "eslint .",
     "preview": "vite preview"
   },

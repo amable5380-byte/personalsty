@@ -1,179 +1,247 @@
-import { useState, useRef } from 'react';
-import type { ChangeEvent } from 'react';
-import { 
-  Camera, 
-  ChevronRight, 
-  Ruler, 
-  Weight, 
-  CheckCircle2,
-  RefreshCcw
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import type { ChangeEvent, DragEvent } from 'react';
+import { Camera, Upload, Trash2, Loader2 } from 'lucide-react';
 import './App.css';
 
-type Step = 'initial' | 'physical' | 'complete';
-
 function App() {
-  const [step, setStep] = useState<Step>('initial');
-  const [photo, setPhoto] = useState<string | null>(null);
-  const [height, setHeight] = useState<string>('170');
-  const [weight, setWeight] = useState<string>('65');
+  const [image, setImage] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [height, setHeight] = useState('');
+  const [weight, setWeight] = useState('');
+  const [faceFeatures, setFaceFeatures] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [report, setReport] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dragCounter = useRef(0);
 
-  const handlePhotoUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhoto(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  useEffect(() => {
+    // Revoke the object URL on unmount to prevent memory leaks
+    return () => {
+      if (image) {
+        URL.revokeObjectURL(image);
+      }
+    };
+  }, [image]);
+
+  const handleFile = useCallback((file: File) => {
+    if (file && file.type.startsWith('image/')) {
+      setImage(prevImage => {
+        if (prevImage) {
+          URL.revokeObjectURL(prevImage);
+        }
+        const newImageUrl = URL.createObjectURL(file);
+        setImageFile(file);
+        return newImageUrl;
+      });
+      setReport(null);
+    }
+  }, []);
+
+  const onFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFile(e.target.files[0]);
     }
   };
 
-  const triggerUpload = () => {
+  const onDragEnter = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current++;
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragging(true);
+    }
+  }, []);
+
+  const onDragLeave = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current--;
+    if (dragCounter.current === 0) {
+      setIsDragging(false);
+    }
+  }, []);
+
+  const onDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const onDrop = useCallback(
+    (e: DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      dragCounter.current = 0;
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleFile(e.dataTransfer.files[0]);
+      }
+    },
+    [handleFile]
+  );
+
+  const handleClick = () => {
     fileInputRef.current?.click();
   };
 
-  const nextStep = () => {
-    if (photo && height && weight) setStep('complete');
+  const removeImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // The useEffect will handle revoking the object URL
+    setImage(null);
+    setImageFile(null);
+    setReport(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-    exit: { opacity: 0, y: -20, transition: { duration: 0.3 } }
+  const handleAnalyze = async () => {
+    if (!imageFile || !height || !weight) {
+      alert('사진, 키, 몸무게를 모두 입력해주세요.');
+      return;
+    }
+
+    setLoading(true);
+    setReport(null);
+
+    const toBase64 = (file: File): Promise<string> =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (error) => reject(error);
+      });
+
+    try {
+      const imageBase64 = await toBase64(imageFile);
+
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ image: imageBase64, height, weight, faceFeatures }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json() as { error?: string };
+        throw new Error(errorData.error || 'Analysis failed');
+      }
+
+      const data = await response.json() as { report?: string; error?: string };
+      if (data.report) {
+        setReport(data.report);
+      } else {
+        alert(data.error || '분석 중 오류가 발생했습니다. 다시 시도해주세요.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      const errorMessage = error instanceof Error ? error.message : '서버와 통신 중 오류가 발생했습니다.';
+      alert(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="app-container">
-      <AnimatePresence mode="wait">
-        {step === 'initial' && (
-          <motion.div 
-            key="initial"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="onboarding-card"
-          >
-            <div className="onboarding-header">
-              <h1>나만의 스타일리스트</h1>
-              <p>정확한 스타일링을 위해 사진과 신체 정보를 입력해 주세요.</p>
+    <div className="App">
+      <div className="container">
+        <h1>Personal Stylist</h1>
+        <p>나만의 스타일을 찾아보세요</p>
+        
+        <div 
+          className={`upload-area ${isDragging ? 'dragging' : ''} ${image ? 'has-image' : ''}`}
+          onDragEnter={onDragEnter}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+          onClick={handleClick}
+        >
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={onFileChange} 
+            accept="image/*" 
+            style={{ display: 'none' }} 
+          />
+          
+          {image ? (
+            <div className="preview-container">
+              <img src={image} alt="Uploaded" className="preview-image" />
+              <button className="remove-btn" onClick={removeImage}>
+                <Trash2 size={18} />
+              </button>
             </div>
-
-            <div className="upload-section">
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handlePhotoUpload} 
-                accept="image/*" 
-                style={{ display: 'none' }} 
-              />
-              <div className="image-dropzone" onClick={triggerUpload} style={{ height: '240px' }}>
-                {photo ? (
-                  <>
-                    <img src={photo} alt="Preview" className="image-preview" />
-                    <div style={{ position: 'absolute', bottom: '1rem', right: '1rem', background: 'rgba(255,255,255,0.9)', padding: '0.5rem', borderRadius: '50%', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
-                      <RefreshCcw size={20} color="var(--primary-color)" />
-                    </div>
-                  </>
-                ) : (
-                  <div className="upload-placeholder">
-                    <Camera size={40} strokeWidth={1.5} />
-                    <span>사진 업로드하기</span>
-                  </div>
-                )}
+          ) : (
+            <>
+              <div className="upload-icon">
+                {isDragging ? <Upload size={48} /> : <Camera size={48} />}
               </div>
+              <p>{isDragging ? '여기에 놓으세요' : '사진을 업로드하거나 드래그하세요'}</p>
+            </>
+          )}
+        </div>
+
+        <div className="input-row">
+          <div className="input-group">
+            <label htmlFor="height">키 (cm)</label>
+            <input 
+              type="text" 
+              id="height" 
+              placeholder="예: 179" 
+              value={height}
+              onChange={(e) => setHeight(e.target.value)}
+            />
+          </div>
+          <div className="input-group">
+            <label htmlFor="weight">몸무게 (kg)</label>
+            <input 
+              type="text" 
+              id="weight" 
+              placeholder="예: 84" 
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="input-group">
+          <label htmlFor="faceFeatures">특이사항 (얼굴 특징 등)</label>
+          <input 
+            type="text" 
+            id="faceFeatures" 
+            placeholder="예: 잘생김, 안경 착용 등" 
+            value={faceFeatures}
+            onChange={(e) => setFaceFeatures(e.target.value)}
+          />
+        </div>
+        
+        <button 
+          className={`analyze-btn ${loading || !imageFile ? 'loading' : ''}`} 
+          onClick={handleAnalyze}
+          disabled={loading || !imageFile}
+        >
+          {loading ? (
+            <>
+              <Loader2 className="spinner" size={18} />
+              <span>AI 분석 중...</span>
+            </>
+          ) : (
+            '스타일 분석 시작'
+          )}
+        </button>
+
+        {report && (
+          <div className="report-container">
+            <h2>스타일 컨설팅 보고서</h2>
+            <div className="report-content">
+              {report.split('\n').map((line, i) => (
+                <p key={i}>{line}</p>
+              ))}
             </div>
-
-            <div className="inputs-section">
-              <div className="input-group">
-                <label>키 (cm)</label>
-                <div style={{ position: 'relative' }}>
-                  <input 
-                    type="number" 
-                    className="input-field" 
-                    value={height}
-                    onChange={(e) => setHeight(e.target.value)}
-                    placeholder="170"
-                    style={{ width: '100%' }}
-                  />
-                  <Ruler size={18} style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
-                </div>
-              </div>
-
-              <div className="input-group">
-                <label>몸무게 (kg)</label>
-                <div style={{ position: 'relative' }}>
-                  <input 
-                    type="number" 
-                    className="input-field" 
-                    value={weight}
-                    onChange={(e) => setWeight(e.target.value)}
-                    placeholder="65"
-                    style={{ width: '100%' }}
-                  />
-                  <Weight size={18} style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
-                </div>
-              </div>
-            </div>
-
-            <button 
-              className="button-primary" 
-              disabled={!photo || !height || !weight}
-              onClick={nextStep}
-              style={{ opacity: (photo && height && weight) ? 1 : 0.5, cursor: (photo && height && weight) ? 'pointer' : 'not-allowed' }}
-            >
-              <span>스타일 분석 시작하기</span>
-              <ChevronRight size={20} />
-            </button>
-          </motion.div>
+          </div>
         )}
-
-        {step === 'complete' && (
-          <motion.div 
-            key="complete"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="onboarding-card"
-            style={{ textAlign: 'center' }}
-          >
-            <div style={{ margin: '0 auto 1.5rem', width: '80px', height: '80px', borderRadius: '50%', background: 'var(--accent-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-color)' }}>
-              <CheckCircle2 size={40} />
-            </div>
-            <div className="onboarding-header">
-              <h1>준비 완료!</h1>
-              <p>당신의 스타일을 분석하고 있습니다. 잠시만 기다려 주세요.</p>
-            </div>
-            
-            <div style={{ marginTop: '2rem', padding: '1.5rem', background: '#f9f9f9', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>키/몸무게</span>
-                <span style={{ fontWeight: 600 }}>{height}cm / {weight}kg</span>
-              </div>
-              <div style={{ width: '100%', height: '6px', background: '#eee', borderRadius: '3px', overflow: 'hidden' }}>
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: '100%' }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  style={{ height: '100%', background: 'var(--accent-color)' }}
-                />
-              </div>
-            </div>
-
-            <button 
-              className="button-primary" 
-              style={{ marginTop: '2rem', width: '100%' }}
-              onClick={() => setStep('initial')}
-            >
-              처음으로 돌아가기
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 }

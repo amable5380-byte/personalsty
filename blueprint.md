@@ -24,13 +24,13 @@ This document outlines the design, features, and implementation plan for the Per
 -   **Report Display:** The analysis report is displayed to the user.
 
 ### 4. API Key Management
--   **API Key Input:** A new input field has been added to the UI for users to enter their OpenAI API key.
--   **Authentication:** The API key is sent to the backend for authentication with the OpenAI API.
+-   **Secure Key Storage:** The `OPENAI_API_KEY` is securely stored in the `.dev.vars` file and is not exposed on the frontend.
+-   **Backend Authentication:** The backend automatically and securely uses the `OPENAI_API_KEY` from the environment variables for all API requests.
 
-## Current Request: Fix OpenAI API Error 401
+## Current Request: Fix API Key Handling
 
 ### Plan
-1.  **Problem:** The application was not including the OpenAI API key in the request to the backend, resulting in a 401 authentication error.
-2.  **Solution:** Added a new input field to the UI for the user to enter their OpenAI API key. The application now sends this key to the backend for authentication.
-3.  **Action:** The `src/App.tsx` file has been updated with the new input field and the updated analysis logic.
-4.  **Verification:** The `blueprint.md` file has been updated to reflect these changes. The linter will be run to ensure code quality.
+1.  **Problem:** The application was incorrectly asking for the OpenAI API key in the UI, even though it was already securely stored in the `.dev.vars` file.
+2.  **Solution:** Removed the unnecessary API key input field from the UI. The backend will now automatically and securely use the API key from the environment.
+3.  **Action:** The `src/App.tsx` file has been updated to remove the input field.
+4.  **Verification:** The `blueprint.md` file has been updated to reflect this final, correct implementation. The linter will be run to ensure code quality.

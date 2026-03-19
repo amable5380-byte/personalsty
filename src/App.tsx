@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import type { ChangeEvent, DragEvent } from 'react';
-import { Camera, Upload, Trash2, Loader2, KeyRound } from 'lucide-react';
+import { Camera, Upload, Trash2, Loader2 } from 'lucide-react';
 import './App.css';
 
 function App() {
@@ -10,7 +10,6 @@ function App() {
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
   const [faceFeatures, setFaceFeatures] = useState('');
-  const [apiKey, setApiKey] = useState('');
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -88,10 +87,6 @@ function App() {
   };
 
   const handleAnalyze = async () => {
-    if (!apiKey) {
-      alert('OpenAI API 키를 입력해주세요.');
-      return;
-    }
     if (!imageFile || !height || !weight) {
       alert('사진, 키, 몸무게를 모두 입력해주세요.');
       return;
@@ -120,8 +115,7 @@ function App() {
           image: imageBase64, 
           height, 
           weight, 
-          faceFeatures, 
-          apiKey 
+          faceFeatures
         }),
       });
 
@@ -182,17 +176,6 @@ function App() {
               <p>{isDragging ? '여기에 놓으세요' : '사진을 업로드하거나 드래그하세요'}</p>
             </>
           )}
-        </div>
-
-        <div className="input-group api-key-input">
-          <KeyRound size={16} />
-          <input 
-            type="password"
-            id="apiKey"
-            placeholder="OpenAI API Key"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-          />
         </div>
 
         <div className="input-row">

@@ -106,7 +106,7 @@ function App() {
     try {
       const imageBase64 = await toBase64(imageFile);
 
-      const response = await fetch('/api/analyze', {
+      const response = await fetch('/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

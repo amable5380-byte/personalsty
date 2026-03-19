@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm:dev:vite\" \"npm:dev:wrangler\"",
+    "dev": "concurrently \"npm:dev:vite -- $1\" \"npm:dev:wrangler\"",
     "dev:vite": "vite",
     "dev:wrangler": "wrangler pages dev ./dist --port 8788 --compatibility-date=2024-04-14",
     "build": "tsc -b && vite build",

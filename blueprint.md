@@ -1,36 +1,36 @@
-
-# Personal Stylist App Blueprint
+# Personal Stylist Application Blueprint
 
 ## Overview
 
-This document outlines the plan for creating a "Personal Stylist" application. The goal is to build a user-friendly interface that allows users to get style recommendations based on their photo, height, and weight.
+This document outlines the design, features, and implementation plan for the Personal Stylist application. The application allows users to upload a photo, provide their height and weight, and receive a personalized style analysis.
 
-## Current Implementation Plan
+## Implemented Features
 
-### Phase 1: Basic UI Implementation (Completed)
+### 1. Image Upload and Preview
+-   **Drag-and-Drop:** Users can drag and drop an image file into the designated area.
+-   **File Picker:** Users can click on the upload area to open a file picker and select an image.
+-   **Image Preview:** Once an image is selected, a preview is displayed.
+-   **Remove Image:** Users can remove the selected image.
 
-1.  **Create the main application component:**
-    *   Set up the main `App` component with a background color and layout.
-2.  **Implement the initial screen:**
-    *   Add title and subtitle.
-    *   Create a file upload area.
-    *   Add input fields for height and weight.
-3.  **Add styling:**
-    *   Apply CSS for layout and aesthetics.
+### 2. User Input
+-   **Height:** A text input for the user to enter their height in centimeters.
+-   **Weight:** A text input for the user to enter their weight in kilograms.
+-   **Face Features:** A text input for the user to provide additional details about their facial features.
 
-### Phase 3: Backend & AI Integration (Completed)
+### 3. Style Analysis
+-   **Analyze Button:** A button to initiate the style analysis. The button is disabled until an image is uploaded.
+-   **API Integration:** The application sends the user's data (image, height, weight, face features) to a backend API for analysis.
+-   **Loading State:** A loading indicator is displayed while the analysis is in progress.
+-   **Report Display:** The analysis report is displayed to the user.
 
-1.  **Cloudflare Pages Functions:**
-    *   Created `functions/api/analyze.ts` to handle backend logic.
-2.  **OpenAI GPT-4.1 Integration:**
-    *   Utilized the newest `gpt-4.1` model and `v1/responses` API.
-3.  **Frontend API Interaction:**
-    *   Implemented logic to send base64 image data, user measurements, and face features.
+### 4. API Key Management
+-   **API Key Input:** A new input field has been added to the UI for users to enter their OpenAI API key.
+-   **Authentication:** The API key is sent to the backend for authentication with the OpenAI API.
 
-### Phase 4: Preview & Deployment Configuration (Completed)
+## Current Request: Fix OpenAI API Error 401
 
-1.  **Cloudflare Pages Preview Setup:**
-    *   Updated `package.json` with `dev:pages` and `build:pages` scripts to use `wrangler`.
-    *   Configured `.idx/dev.nix` to use `npm run build:pages` for the workspace preview, enabling both the frontend and functions to run locally.
-2.  **Environment Variables:**
-    *   Configured the environment to support `OPENAI_API_KEY` for secure API access.
+### Plan
+1.  **Problem:** The application was not including the OpenAI API key in the request to the backend, resulting in a 401 authentication error.
+2.  **Solution:** Added a new input field to the UI for the user to enter their OpenAI API key. The application now sends this key to the backend for authentication.
+3.  **Action:** The `src/App.tsx` file has been updated with the new input field and the updated analysis logic.
+4.  **Verification:** The `blueprint.md` file has been updated to reflect these changes. The linter will be run to ensure code quality.

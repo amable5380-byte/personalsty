@@ -1,42 +1,39 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import type { ChangeEvent, DragEvent } from 'react';
-import { Camera, Upload, Trash2, Loader2 } from 'lucide-react';
+import { Camera, Upload, Trash2, Loader2, KeyRound } from 'lucide-react';
 import './App.css';
 
 function App() {
-  const [image, setImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
   const [faceFeatures, setFaceFeatures] = useState('');
+  const [apiKey, setApiKey] = useState('');
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounter = useRef(0);
 
   useEffect(() => {
-    // Revoke the object URL on unmount to prevent memory leaks
-    return () => {
-      if (image) {
-        URL.revokeObjectURL(image);
-      }
-    };
-  }, [image]);
+    if (!imageFile) {
+      setPreviewUrl(null);
+      return;
+    }
 
-  const handleFile = useCallback((file: File) => {
+    const objectUrl = URL.createObjectURL(imageFile);
+    setPreviewUrl(objectUrl);
+
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [imageFile]);
+
+  const handleFile = (file: File) => {
     if (file && file.type.startsWith('image/')) {
-      setImage(prevImage => {
-        if (prevImage) {
-          URL.revokeObjectURL(prevImage);
-        }
-        const newImageUrl = URL.createObjectURL(file);
-        setImageFile(file);
-        return newImageUrl;
-      });
+      setImageFile(file);
       setReport(null);
     }
-  }, []);
+  };
 
   const onFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -67,18 +64,15 @@ function App() {
     e.stopPropagation();
   }, []);
 
-  const onDrop = useCallback(
-    (e: DragEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setIsDragging(false);
-      dragCounter.current = 0;
-      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-        handleFile(e.dataTransfer.files[0]);
-      }
-    },
-    [handleFile]
-  );
+  const onDrop = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    dragCounter.current = 0;
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  }, []);
 
   const handleClick = () => {
     fileInputRef.current?.click();
@@ -86,8 +80,6 @@ function App() {
 
   const removeImage = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // The useEffect will handle revoking the object URL
-    setImage(null);
     setImageFile(null);
     setReport(null);
     if (fileInputRef.current) {
@@ -96,6 +88,10 @@ function App() {
   };
 
   const handleAnalyze = async () => {
+    if (!apiKey) {
+      alert('OpenAI API 키를 입력해주세요.');
+      return;
+    }
     if (!imageFile || !height || !weight) {
       alert('사진, 키, 몸무게를 모두 입력해주세요.');
       return;
@@ -109,7 +105,7 @@ function App() {
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = () => resolve(reader.result as string);
-        reader.onerror = (error) => reject(error);
+        reader.onerror = error => reject(error);
       });
 
     try {
@@ -120,7 +116,13 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ image: imageBase64, height, weight, faceFeatures }),
+        body: JSON.stringify({ 
+          image: imageBase64, 
+          height, 
+          weight, 
+          faceFeatures, 
+          apiKey 
+        }),
       });
 
       if (!response.ok) {
@@ -150,7 +152,7 @@ function App() {
         <p>나만의 스타일을 찾아보세요</p>
         
         <div 
-          className={`upload-area ${isDragging ? 'dragging' : ''} ${image ? 'has-image' : ''}`}
+          className={`upload-area ${isDragging ? 'dragging' : ''} ${previewUrl ? 'has-image' : ''}`}
           onDragEnter={onDragEnter}
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
@@ -165,9 +167,9 @@ function App() {
             style={{ display: 'none' }} 
           />
           
-          {image ? (
+          {previewUrl ? (
             <div className="preview-container">
-              <img src={image} alt="Uploaded" className="preview-image" />
+              <img src={previewUrl} alt="Uploaded" className="preview-image" />
               <button className="remove-btn" onClick={removeImage}>
                 <Trash2 size={18} />
               </button>
@@ -180,6 +182,17 @@ function App() {
               <p>{isDragging ? '여기에 놓으세요' : '사진을 업로드하거나 드래그하세요'}</p>
             </>
           )}
+        </div>
+
+        <div className="input-group api-key-input">
+          <KeyRound size={16} />
+          <input 
+            type="password"
+            id="apiKey"
+            placeholder="OpenAI API Key"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+          />
         </div>
 
         <div className="input-row">

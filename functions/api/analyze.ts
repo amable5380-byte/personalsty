@@ -23,6 +23,9 @@ interface OpenAIResponse {
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   try {
     const { image, height, weight, faceFeatures } = await context.request.json() as RequestBody;
+    
+    // Log key presence for debugging (don't log full key!)
+    console.log('API Key loaded:', context.env.OPENAI_API_KEY ? `Yes (starts with ${context.env.OPENAI_API_KEY.slice(0, 5)}...)` : 'No');
 
     if (!image || !height || !weight) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
